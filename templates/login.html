@@ -1,0 +1,66 @@
+<!-- {% extends 'base.html' %} -->
+<!-- {% block content %} -->
+
+<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <div style="width: 100%; max-width: 400px; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); transition: transform 0.3s ease;">
+        
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-block; width: 70px; height: 70px; background: #ebf5ff; border-radius: 50%; line-height: 70px; font-size: 30px; color: #3498db; margin-bottom: 15px;">
+                🔐
+            </div>
+            <h2 style="margin: 0; color: #2c3e50; font-size: 26px; font-weight: 700;">Xush kelibsiz</h2>
+            <p style="color: #7f8c8d; font-size: 14px; margin-top: 8px;">Tizimga kirish uchun ma'lumotlarni kiriting</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e; font-size: 14px;">Foydalanuvchi nomi:</label>
+                <div style="position: relative;">
+                    <input type="text" name="username" placeholder="Loginingizni yozing" required 
+                           style="width: 100%; padding: 14px 15px; border: 2px solid #f1f3f5; border-radius: 12px; font-size: 15px; outline: none; transition: all 0.3s; background: #f8f9fa;">
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e; font-size: 14px;">Maxfiy parol:</label>
+                <input type="password" name="password" placeholder="••••••••" required 
+                       style="width: 100%; padding: 14px 15px; border: 2px solid #f1f3f5; border-radius: 12px; font-size: 15px; outline: none; transition: all 0.3s; background: #f8f9fa;">
+            </div>
+
+            <button type="submit" 
+                    style="width: 100%; padding: 15px; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3); transition: all 0.3s;">
+                Tizimga kirish
+            </button>
+        </form>
+        
+        {% if form.errors %}
+            <div style="margin-top: 20px; padding: 12px; background: #fff5f5; border-left: 4px solid #e74c3c; border-radius: 6px;">
+                <p style="color: #c0392b; margin: 0; font-size: 13px; font-weight: 500;">❌ Login yoki parol xato kiritildi!</p>
+            </div>
+        {% endif %}
+
+        <div style="text-align: center; margin-top: 30px;">
+            <p style="color: #bdc3c7; font-size: 12px;">© 2026 Markaz CRM. Barcha huquqlar himoyalangan.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            input.style.borderColor = '#3498db';
+            input.style.background = '#fff';
+            input.style.boxShadow = '0 0 0 4px rgba(52, 152, 219, 0.1)';
+        });
+        input.addEventListener('blur', () => {
+            input.style.borderColor = '#f1f3f5';
+            input.style.background = '#f8f9fa';
+            input.style.boxShadow = 'none';
+        });
+    });
+</script>
+
+{% endblock %}

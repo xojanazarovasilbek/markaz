@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Guruh: {{ group.name }} (Davomat)</h2>
+<form method="post">
+    {% csrf_token %}
+    <table>
+        <thead>
+            <tr>
+                <th>O'quvchi</th>
+                <th>Darsda? (Belgilang)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in students %}
+            <tr>
+                <td>{{ s.full_name }}</td>
+                <td>
+                    <input type="checkbox" name="attendance_{{ s.id }}" checked style="transform: scale(1.5);">
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <button type="submit" class="btn btn-add" style="font-size: 18px;">💾 Saqlash </button>
+</form>
+{% endblock %}

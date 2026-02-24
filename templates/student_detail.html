@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <h2>O'quvchi: {{ student.full_name }}</h2>
+    <a href="{% url 'add_payment' student.id %}" style="background: #3498db; color: white; padding: 10px; text-decoration: none; border-radius: 5px;">
+        To'lov kiritish +
+    </a>
+    <a href="{% url 'move_student' student.id %}" class="btn btn-edit">🔄 Guruhni almashtirish</a>
+</div>
+
+<div style="background: #ecf0f1; padding: 20px; border-radius: 8px; margin-top: 20px;">
+    <p><b>Telefon:</b> {{ student.phone }}</p>
+    <p><b>Guruh:</b> {{ student.group.name }}</p>
+    <p><b>Joriy balans:</b> 
+        <span style="color: {% if student.balance < 0 %}red{% else %}green{% endif %}; font-weight: bold;">
+            {{ student.balance }} so'm
+        </span>
+    </p>
+</div>
+
+<h3>To'lovlar tarixi</h3>
+<table border="1" width="100%" style="border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th>Sana</th>
+            <th>Summa</th>
+            <th>Turi</th>
+            <th>Chek</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for payment in student.payments.all %}
+        <tr>
+            <td style="padding: 10px;">{{ payment.date|date:"d.m.Y H:i" }}</td>
+            <td>{{ payment.amount }} so'm</td>
+            <td>{{ payment.get_payment_type_display }}</td>
+            <td>
+                {% if payment.receipt_image %}
+                    <a href="{{ payment.receipt_image.url }}" target="_blank">
+                        <img src="{{ payment.receipt_image.url }}" width="50" style="border: 1px solid #ddd;">
+                    </a>
+                {% else %}
+                    Rasm yo'q
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4">Hali to'lov qilinmagan.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

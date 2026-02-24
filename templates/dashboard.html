@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .stats-container {
+        display: flex;
+        gap: 20px;
+        margin-top: 20px;
+    }
+    .card {
+        flex: 1;
+        padding: 20px;
+        border-radius: 10px;
+        color: white;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        text-decoration: none;
+        transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-5px); }
+    
+    .bg-students { background-color: #3498db; }
+    .bg-teachers { background-color: #9b59b6; }
+    .bg-groups { background-color: #0ff11a; }
+    .bg-absent { background-color: #e74c3c; }
+    .bg-warning { background-color: #e67e22; } /* To'lov uchun yangi rang */
+
+    .report-section {
+        display: flex;
+        gap: 20px;
+        margin-top: 30px;
+        flex-wrap: wrap;
+    }
+    .report-box {
+        flex: 1;
+        min-width: 300px;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        border: 1px solid #eee;
+    }
+    h2 { font-family: sans-serif; color: #2c3e50; margin-bottom: 10px; }
+    .status-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .status-table th { text-align: left; border-bottom: 2px solid #eee; padding: 10px 5px; color: #7f8c8d; }
+    .status-table td { padding: 12px 5px; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
+</style>
+
+<h2>Tizim ko'rsatkichlari</h2>
+
+<div class="stats-container">
+    <a href="{% url 'student_list' %}" class="card bg-students">
+        <h3>{{ students_count }}</h3>
+        <p>O'quvchilar</p>
+    </a>
+    <a href="{% url 'teacher_list' %}" class="card bg-teachers">
+        <h3>{{ teachers_count }}</h3>
+        <p>Ustozlar</p>
+    </a>
+    <a href="{% url 'group_list' %}" class="card bg-groups">
+        <h3>{{ groups_count }}</h3>
+        <p>Guruhlar</p>
+    </a>
+    <div class="card bg-absent">
+        <h3>{{ absent_today.count }}</h3>
+        <p>Bugun Kelmaganlar</p>
+    </div>
+    <div class="card bg-warning">
+        <h3>{{ warning_students.count }}</h3>
+        <p>To'lovga < 5 kun</p>
+    </div>
+</div>
+
+<div class="report-section">
+    <div class="report-box" style="border-top: 4px solid #e67e22; flex: 100%;">
+        <h3 style="color: #e67e22;">⚠️ To'lov muddati yaqinlashganlar (5 kun ichida)</h3>
+        <table class="status-table">
+            <thead>
+                <tr>
+                    <th>O'quvchi</th>
+                    <th>Guruh</th>
+                    <th>Muddati</th>
+                    <th>Holat</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in warning_students %}
+                <tr>
+                    <td><b>{{ s.full_name }}</b></td>
+                    <td>{{ s.group.name }}</td>
+                    <td>{{ s.pay_until }}</td>
+                    <td>
+                        {% if s.days_left < 0 %}
+                            <span style="background: #f8d7da; color: #721c24; padding: 3px 8px; border-radius: 5px;">Muddati o'tgan</span>
+                        {% else %}
+                            <span style="background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 5px;">{{ s.days_left }} kun qoldi</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4">Hozircha xavfli zonada o'quvchilar yo'q.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="report-box" style="border-top: 4px solid #e74c3c;">
+        <h3 style="color: #e74c3c;">🔴 Bugun Kelmaganlar</h3>
+        <table class="status-table">
+            <thead>
+                <tr>
+                    <th>O'quvchi</th>
+                    <th>Telefon</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in absent_today %}
+                <tr>
+                    <td>{{ a.student.full_name }} ({{ a.group.name }})</td>
+                    <td>{{ a.student.phone }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="2">Hali dars qoldirganlar yo'q.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="report-box" style="border-top: 4px solid #27ae60;">
+        <h3 style="color: #27ae60;">🟢 Bugun Kelganlar</h3>
+        <table class="status-table">
+            <thead>
+                <tr>
+                    <th>O'quvchi</th>
+                    <th>Guruh</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in present_today %}
+                <tr>
+                    <td>{{ p.student.full_name }}</td>
+                    <td>{{ p.group.name }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="2">Hali davomat qilinmagan.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

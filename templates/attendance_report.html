@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .report-container {
+        max-width: 1000px;
+        margin: 20px auto;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .report-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+    }
+    .report-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border-top: 5px solid;
+    }
+    .absent-card { border-top-color: #e74c3c; }
+    .present-card { border-top-color: #2ecc71; }
+
+    .card-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .count-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        color: white;
+        font-weight: bold;
+    }
+    .bg-red { background: #e74c3c; }
+    .bg-green { background: #2ecc71; }
+
+    .student-list {
+        list-style: none;
+        padding: 0;
+    }
+    .student-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 10px;
+        border-bottom: 1px solid #f1f1f1;
+        transition: background 0.2s;
+    }
+    .student-item:hover { background: #fdfdfd; }
+    .student-info b { color: #2c3e50; }
+    .group-tag {
+        font-size: 11px;
+        background: #f0f2f5;
+        padding: 2px 8px;
+        border-radius: 10px;
+        color: #7f8c8d;
+    }
+    .phone-link {
+        color: #3498db;
+        text-decoration: none;
+        font-size: 13px;
+    }
+
+    @media (max-width: 768px) {
+        .grid-container { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="report-container">
+    <div class="report-header">
+        <h2 style="margin: 0; color: #2c3e50;">📊 Davomat Hisoboti</h2>
+        <p style="color: #7f8c8d; margin-top: 10px;">📅 Sana: <b>{{ today }}</b></p>
+    </div>
+
+    <div class="grid-container">
+        <div class="report-card absent-card">
+            <div class="card-title">
+                <h3 style="margin: 0; color: #c0392b;">🔴 Kelmaganlar</h3>
+                <span class="count-badge bg-red">{{ absent|length }}</span>
+            </div>
+            <ul class="student-list">
+                {% for a in absent %}
+                <li class="student-item">
+                    <div class="student-info">
+                        <b>{{ a.student.full_name }}</b> <br>
+                        <span class="group-tag">{{ a.group.name }}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <a href="tel:{{ a.student.phone }}" class="phone-link">📞 {{ a.student.phone }}</a> <br>
+                        <small style="color: #95a5a6; font-size: 10px;">📩 SMS yuborildi</small>
+                    </div>
+                </li>
+                {% empty %}
+                <p style="color: #95a5a6; text-align: center;">Hamma darsda! ✨</p>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="report-card present-card">
+            <div class="card-title">
+                <h3 style="margin: 0; color: #27ae60;">🟢 Kelganlar</h3>
+                <span class="count-badge bg-green">{{ present|length }}</span>
+            </div>
+            <ul class="student-list">
+                {% for p in present %}
+                <li class="student-item">
+                    <div class="student-info">
+                        <b>{{ p.student.full_name }}</b> <br>
+                        <span class="group-tag">{{ p.group.name }}</span>
+                    </div>
+                    <span style="color: #27ae60; font-size: 18px;">✓</span>
+                </li>
+                {% empty %}
+                <p style="color: #95a5a6; text-align: center;">Hali hech kim kelmadi.</p>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
