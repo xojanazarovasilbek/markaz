@@ -2,33 +2,45 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Group, Student, Attendance, Payment
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.db.models import Count, Q
+
+
+
 
 @login_required
-
-
 def group_attendance_view(request, group_id):
     group = get_object_or_404(Group, id=group_id)
     students = group.students.all()
     
     if request.method == "POST":
         for student in students:
-            # Checkbox belgilangan bo'lsa True, bo'lmasa False
+            # Checkbox holati
             status = request.POST.get(f'attendance_{student.id}') == 'on'
-            
-            # Davomatni yozish
+            # Sabab va Izoh
+            reason = request.POST.get(f'reason_{student.id}')
+            comment = request.POST.get(f'comment_{student.id}', "")
+
+            # Davomatni saqlash yoki yangilash
             Attendance.objects.update_or_create(
                 student=student, 
                 group=group, 
                 date=timezone.now().date(),
-                defaults={'is_present': status}
+                defaults={
+                    'is_present': status,
+                    'reason_type': reason if not status else None,
+                    'comment': comment if not status else ""
+                }
             )
             
-            # Agar kelmagan bo'lsa SMS yuborish (Eskiz API misolida)
-            if not status:
+            # SMS yuborish (faqat sababsiz bo'lsa yuborishni sozlasa ham bo'ladi)
+            if not status and reason == 'sababsiz':
                 send_absent_sms(student.phone, student.full_name)
                 
-        return redirect('dashboard') # Yoki guruhlar ro'yxatiga
+        return redirect('dashboard')
 
+    # 3 marta dars qoldirganlarni dashboardda chiqarish uchun mantiqni 
+    # alohida dashboard viewda yozish tavsiya etiladi.
     return render(request, 'attendance.html', {'group': group, 'students': students})
 
 def send_absent_sms(phone, name):
@@ -92,27 +104,54 @@ def student_payment(request, student_id):
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Student, Teacher, Group, Attendance, Payment
 from django.utils import timezone
-
-# 1. Dashboard - Umumiy statistika
-from datetime import timedelta
 from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Q
+
 @login_required
+
+
 def dashboard(request):
     today = timezone.now().date()
     five_days_later = today + timedelta(days=5)
     
+    # 1. Surunkali dars qoldirganlar (Ketma-ket 3 ta)
+    chronic_absent_students = []
+    for student in Student.objects.all():
+        last_3 = Attendance.objects.filter(student=student).order_by('-date')[:3]
+        if last_3.count() == 3 and all(not att.is_present for att in last_3):
+            chronic_absent_students.append(student)
+
+    # 2. Bugungi davomat yozuvlari
+    absent_records = Attendance.objects.filter(date=today, is_present=False)
+    
+    # Kelmaganlarni turlarga ajratish
+    absent_unexcused = absent_records.filter(reason_type='sababsiz')
+    absent_excused = absent_records.filter(reason_type='sababli')
+    present_today = Attendance.objects.filter(date=today, is_present=True)
+
+    # 3. To'lovlar mantiqi (Sizda yo'qolib qolgan qism)
+    warning_students = Student.objects.filter(
+        pay_until__lte=five_days_later, 
+        pay_until__gte=today
+    )
+    debtors_count = Student.objects.filter(pay_until__lt=today).count()
+
     context = {
         'students_count': Student.objects.count(),
         'teachers_count': Teacher.objects.count(),
         'groups_count': Group.objects.count(),
-        'absent_today': Attendance.objects.filter(date=today, is_present=False),
-        'present_today': Attendance.objects.filter(date=today, is_present=True),
         
-        # To'lovi tugashiga 5 kun yoki undan kam qolganlar
-        'warning_students': Student.objects.filter(pay_until__lte=five_days_later, pay_until__gte=today),
+        # Davomat ma'lumotlari
+        'absent_unexcused': absent_unexcused,
+        'absent_excused': absent_excused,
+        'present_today': present_today,
+        'chronic_absent_students': chronic_absent_students,
         
-        # To'lov muddati o'tib ketganlar (Qarzdorlar)
-        'debtors_count': Student.objects.filter(pay_until__lt=today).count(),
+        # To'lov ma'lumotlari (Mana bular endi dashboardda chiqadi)
+        'warning_students': warning_students,
+        'debtors_count': debtors_count,
+        'today': today,
     }
     return render(request, 'dashboard.html', context)
 

@@ -44,8 +44,20 @@ class Student(models.Model):
 class Attendance(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    date = models.DateField(default=timezone.now)
-    is_present = models.BooleanField(default=False)
+    date = models.DateField()
+    is_present = models.BooleanField(default=True)
+    
+    # SHU IKKI QATORNI QO'SHING
+    reason_type = models.CharField(
+        max_length=20, 
+        choices=[('sababli', 'Sababli'), ('sababsiz', 'Sababsiz')], 
+        null=True, 
+        blank=True
+    )
+    comment = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.student.full_name} - {self.date}"
 
 # 5. To'lovlar (Naqd/Click va Chek rasmi)
 class Payment(models.Model):
