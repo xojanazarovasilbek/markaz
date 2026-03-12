@@ -339,10 +339,12 @@ def teacher_create_simple(request):
                 user=user,
                 phone=form.cleaned_data['phone']
             )
-            # 3. Guruhga ustozni biriktirish
-            group = form.cleaned_data['group']
-            group.teacher = teacher
-            group.save()
+            
+            # 3. Guruhga ustozni biriktirish (Ixtiyoriy qism)
+            group = form.cleaned_data.get('group') # get ishlatish xavfsizroq
+            if group is not None:  # Agar guruh tanlangan bo'lsagina ishlaydi
+                group.teacher = teacher
+                group.save()
             
             return redirect('teacher_list')
     else:
