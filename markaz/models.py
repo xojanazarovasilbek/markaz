@@ -5,7 +5,7 @@ from decimal import Decimal
 # 1. Ustozlar
 class Teacher(models.Model):
     name = models.CharField(max_length=100)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE , null=True, blank=True)
     phone = models.CharField(max_length=13)
     
     def __str__(self):
