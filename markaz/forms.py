@@ -32,5 +32,6 @@ class SimpleTeacherForm(forms.Form):
         queryset=Group.objects.all(), 
         label="Guruh biriktirish",
         empty_label="Guruhni tanlang",
+        required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
