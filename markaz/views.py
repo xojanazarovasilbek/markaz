@@ -108,9 +108,17 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Q
 
-@login_required
 
+from django.contrib.auth.decorators import user_passes_test
+from django.core.exceptions import PermissionDenied
 
+# Faqat superuserga ruxsat beruvchi mantiq
+def is_admin(user):
+    if user.is_authenticated and user.is_superuser:
+        return True
+    return False
+
+@user_passes_test(is_admin, login_url='login')
 def dashboard(request):
     today = timezone.now().date()
     five_days_later = today + timedelta(days=5)
@@ -174,6 +182,7 @@ def group_list(request):
     return render(request, 'groups.html', {'groups': groups})
 
 # 5. Davomat hisoboti (Bugun kim keldi, kim kelmadi)
+@login_required
 def attendance_report(request):
     today = timezone.now().date()
     absent = Attendance.objects.filter(date=today, is_present=False)
@@ -187,7 +196,7 @@ def attendance_report(request):
 
 from django.shortcuts import render, get_object_or_404
 from .models import Student, Payment, Attendance
-
+@login_required
 def student_detail(request, student_id):
     # O'quvchini ID bo'yicha topamiz, agar yo'q bo'lsa 404 xatolik beradi
     student = get_object_or_404(Student, id=student_id)
@@ -212,6 +221,7 @@ from .forms import StudentForm, TeacherForm, GroupForm, SimpleTeacherForm
 from .models import Student, Teacher, Group
 
 # --- O'QUVCHILAR UCHUN ---
+@login_required
 def student_create(request):
     if request.method == "POST":
         form = StudentForm(request.POST)
@@ -221,7 +231,7 @@ def student_create(request):
     else:
         form = StudentForm()
     return render(request, 'form_template.html', {'form': form, 'title': "Yangi o'quvchi qo'shish"})
-
+@login_required
 def student_update(request, pk):
     student = get_object_or_404(Student, pk=pk)
     if request.method == "POST":
@@ -232,7 +242,7 @@ def student_update(request, pk):
     else:
         form = StudentForm(instance=student)
     return render(request, 'form_template.html', {'form': form, 'title': "O'quvchini tahrirlash"})
-
+@login_required
 def student_delete(request, pk):
     student = get_object_or_404(Student, pk=pk)
     if request.method == "POST":
@@ -241,6 +251,7 @@ def student_delete(request, pk):
     return render(request, 'confirm_delete.html', {'obj': student})
 
 # --- GURUHLAR UCHUN ---
+@login_required
 def group_create(request):
     if request.method == "POST":
         form = GroupForm(request.POST)
@@ -252,11 +263,13 @@ def group_create(request):
 
 
 # Ustozlar ro'yxati
+@login_required
 def teacher_list(request):
     teachers = Teacher.objects.all()
     return render(request, 'teachers.html', {'teachers': teachers})
 
 # Ustoz qo'shish
+@login_required
 def teacher_create(request):
     form = TeacherForm(request.POST or None)
     if form.is_valid():
@@ -265,6 +278,7 @@ def teacher_create(request):
     return render(request, 'form_template.html', {'form': form, 'title': "Yangi ustoz"})
 
 # Ustozni tahrirlash
+@login_required
 def teacher_update(request, pk):
     teacher = get_object_or_404(Teacher, pk=pk)
     form = TeacherForm(request.POST or None, instance=teacher)
@@ -274,6 +288,7 @@ def teacher_update(request, pk):
     return render(request, 'form_template.html', {'form': form, 'title': "Ustoz ma'lumotlarini tahrirlash"})
 
 # Ustozni o'chirish
+@login_required
 def teacher_delete(request, pk):
     teacher = get_object_or_404(Teacher, pk=pk)
     if request.method == "POST":
@@ -285,7 +300,7 @@ def teacher_delete(request, pk):
 
 
 
-
+@login_required
 def move_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     groups = Group.objects.exclude(id=student.group.id) # Hozirgi guruhidan boshqa hamma guruhlar
@@ -305,7 +320,7 @@ def move_student(request, student_id):
         'groups': groups
     })
 
-
+@login_required
 def change_group_teacher(request, group_id):
     group = get_object_or_404(Group, id=group_id)
     teachers = Teacher.objects.all()
@@ -323,7 +338,7 @@ def change_group_teacher(request, group_id):
         'group': group,
         'teachers': teachers
     })
-
+@login_required
 def teacher_create_simple(request):
     if request.method == "POST":
         form = SimpleTeacherForm(request.POST)
