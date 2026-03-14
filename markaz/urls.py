@@ -5,8 +5,8 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     # ... boshqa url-lar
-    path('', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('', views.custom_login, name='login'),
+    path('logout/',views.logout_view, name='logout'),
 
     # Asosiy sahifa (Dashboard)
     path('bosh-sahifa/', views.dashboard, name='dashboard'),

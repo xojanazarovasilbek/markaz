@@ -355,3 +355,37 @@ def teacher_create_simple(request):
     
     return render(request, 'teacher_add_custom.html', {'form': form})
 
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login as auth_login
+
+def custom_login(request):
+    if request.method == 'POST':
+        u = request.POST.get('username')
+        p = request.POST.get('password')
+        user = authenticate(username=u, password=p)
+        
+        if user is not None:
+            auth_login(request, user)
+            
+            # KIMLIGINI TEKSHIRISH
+            if user.is_superuser:
+                # Admin bo'lsa - Dashboardga
+                return redirect('dashboard')
+            else:
+                # Ustoz (oddiy user) bo'lsa - Tashqi saytga
+                return redirect('https://kun.uz')
+        else:
+            return render(request, 'login.html', {'error': 'Login yoki parol xato!'})
+            
+    return render(request, 'login.html')
+
+
+from django.contrib.auth import logout as auth_logout
+
+def logout_view(request):
+    if request.method == 'POST':
+        auth_logout(request) # Tizimdan chiqarish
+        return redirect('login') # Chiqib ketgandan keyin login sahifasiga qaytarish
+    
+    # Agar kimdir URL orqali (GET) kirmoqchi bo'lsa, uni ham login sahifasiga haydaymiz
+    return redirect('login')
