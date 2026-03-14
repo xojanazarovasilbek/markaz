@@ -132,7 +132,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Muvaffaqiyatli kirishdan so'ng Dashboard (asosiy) sahifasiga yuborish
-LOGIN_REDIRECT_URL = 'dashboard' 
-
-# Tizimdan chiqqanda login sahifasiga yuborish
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'

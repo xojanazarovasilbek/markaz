@@ -5,8 +5,58 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Count, Q
 
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Student, Teacher, Group, Attendance, Payment
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Q
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied # Taqiqlangan kirish uchun
+from django.contrib.auth.decorators import login_required
 
+@login_required(login_url='login')
+def dashboard(request):
 
+    today = timezone.now().date()
+    five_days_later = today + timedelta(days=5)
+
+    chronic_absent_students = []
+    all_students = Student.objects.all()
+
+    for student in all_students:
+        last_3 = Attendance.objects.filter(student=student).order_by('-date')[:3]
+        if last_3.count() == 3 and all(not att.is_present for att in last_3):
+            chronic_absent_students.append(student)
+
+    absent_records = Attendance.objects.filter(date=today, is_present=False)
+
+    absent_unexcused = absent_records.filter(reason_type='sababsiz')
+    absent_excused = absent_records.filter(reason_type='sababli')
+    present_today = Attendance.objects.filter(date=today, is_present=True)
+
+    warning_students = Student.objects.filter(
+        pay_until__lte=five_days_later,
+        pay_until__gte=today
+    )
+
+    debtors_count = Student.objects.filter(pay_until__lt=today).count()
+
+    context = {
+        'students_count': all_students.count(),
+        'teachers_count': Teacher.objects.count(),
+        'groups_count': Group.objects.count(),
+
+        'absent_unexcused': absent_unexcused,
+        'absent_excused': absent_excused,
+        'present_today': present_today,
+        'chronic_absent_students': chronic_absent_students,
+
+        'warning_students': warning_students,
+        'debtors_count': debtors_count,
+        'today': today,
+    }
+
+    return render(request, 'dashboard.html', context)
 
 @login_required
 def group_attendance_view(request, group_id):
@@ -100,71 +150,6 @@ def student_payment(request, student_id):
     return render(request, 'add_payment.html', {'student': student})
 
 
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Student, Teacher, Group, Attendance, Payment
-from django.utils import timezone
-from datetime import timedelta
-from django.db.models import Q
-from django.contrib import messages # Xabarlar uchun
-
-def dashboard(request):
-    # 1. QO'LDA TEKSHIRISH (Security Check)
-    # Birinchi: Foydalanuvchi login qilganmi?
-    if not request.user.is_authenticated:
-        return redirect('login') # Login qilmagan bo'lsa, srazu login sahifasiga
-    
-    # Ikkinchi: Foydalanuvchi adminmi (superuser)?
-    if not request.user.is_superuser:
-        # Agar login qilgan bo'lsa-yu, lekin admin bo'lmasa (masalan ustoz bo'lsa)
-        # Uni o'ziga tegishli sahifaga yoki login sahifasiga haydaymiz
-        return redirect('login') 
-
-    # --- AGAR TEKSHIRUVDAN O'TSA, KEYIN PASTDAGI KODLAR ISHLAYDI ---
-
-    today = timezone.now().date()
-    five_days_later = today + timedelta(days=5)
-    
-    # 1. Surunkali dars qoldirganlar (Ketma-ket 3 ta)
-    chronic_absent_students = []
-    # Bazani ortiqcha yuklamaslik uchun Student.objects.all() o'rniga filter ishlatsa ham bo'ladi
-    all_students = Student.objects.all()
-    for student in all_students:
-        last_3 = Attendance.objects.filter(student=student).order_by('-date')[:3]
-        if last_3.count() == 3 and all(not att.is_present for att in last_3):
-            chronic_absent_students.append(student)
-
-    # 2. Bugungi davomat yozuvlari
-    absent_records = Attendance.objects.filter(date=today, is_present=False)
-    
-    # Kelmaganlarni turlarga ajratish
-    absent_unexcused = absent_records.filter(reason_type='sababsiz')
-    absent_excused = absent_records.filter(reason_type='sababli')
-    present_today = Attendance.objects.filter(date=today, is_present=True)
-
-    # 3. To'lovlar mantiqi
-    warning_students = Student.objects.filter(
-        pay_until__lte=five_days_later, 
-        pay_until__gte=today
-    )
-    debtors_count = Student.objects.filter(pay_until__lt=today).count()
-
-    context = {
-        'students_count': all_students.count(),
-        'teachers_count': Teacher.objects.count(),
-        'groups_count': Group.objects.count(),
-        
-        # Davomat ma'lumotlari
-        'absent_unexcused': absent_unexcused,
-        'absent_excused': absent_excused,
-        'present_today': present_today,
-        'chronic_absent_students': chronic_absent_students,
-        
-        # To'lov ma'lumotlari
-        'warning_students': warning_students,
-        'debtors_count': debtors_count,
-        'today': today,
-    }
-    return render(request, 'dashboard.html', context)
 
 # 2. O'quvchilar ro'yxati
 @login_required

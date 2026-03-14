@@ -5,9 +5,38 @@
     <title>O'quv Markazi CRM</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 0; background: #f4f7f6; }
-        nav { background: #2c3e50; padding: 15px; color: white; display: flex; gap: 20px; }
-        nav a { color: white; text-decoration: none; font-weight: bold; }
+        /* Navbarni ikki tomonga ajratish uchun display o'zgaradi */
+        nav { 
+            background: #2c3e50; 
+            padding: 10px 25px; 
+            color: white; 
+            display: flex; 
+            justify-content: space-between; /* Menyu chapda, account o'ngda */
+            align-items: center; 
+        }
+        .nav-links { display: flex; gap: 20px; }
+        nav a { color: white; text-decoration: none; font-weight: bold; font-size: 14px; }
         nav a:hover { color: #3498db; }
+        
+        /* Account qismi stili */
+        .user-account { display: flex; align-items: center; gap: 15px; }
+        .user-info { text-align: right; line-height: 1.2; }
+        .username { display: block; font-weight: bold; color: #ecf0f1; }
+        .user-role { font-size: 11px; color: #bdc3c7; text-transform: uppercase; }
+        
+        .logout-btn { 
+            background: #e74c3c; 
+            color: white; 
+            border: none; 
+            padding: 6px 12px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+        .logout-btn:hover { background: #c0392b; }
+
         .container { padding: 20px; max-width: 1200px; margin: auto; }
         table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; }
         th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
@@ -21,12 +50,31 @@
 </head>
 <body>
     <nav>
-        <a href="{% url 'dashboard' %}">🏠 Asosiy</a>
-        <a href="{% url 'student_list' %}">🎓 O'quvchilar</a>
-        <a href="{% url 'group_list' %}">📚 Guruhlar</a>
-        <a href="{% url 'teacher_list' %}">👨‍🏫 Ustozlar</a>
-        <a href="{% url 'attendance_report' %}">Davomat Hisoboti</a>
+        <div class="nav-links">
+            <a href="{% url 'dashboard' %}">🏠 Asosiy</a>
+            <a href="{% url 'student_list' %}">🎓 O'quvchilar</a>
+            <a href="{% url 'group_list' %}">📚 Guruhlar</a>
+            <a href="{% url 'teacher_list' %}">👨‍🏫 Ustozlar</a>
+            <a href="{% url 'attendance_report' %}">Davomat Hisoboti</a>
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="user-account">
+            <div class="user-info">
+                <span class="username">{{ user.username }}</span>
+                <span class="user-role">{% if user.is_superuser %}Admin{% else %}Ustoz{% endif %}</span>
+            </div>
+            
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn">Chiqish</button>
+            </form>
+        </div>
+        {% else %}
+        <a href="{% url 'login' %}" class="btn btn-info">Kirish</a>
+        {% endif %}
     </nav>
+
     <div class="container">
         {% block content %}{% endblock %}
     </div>
